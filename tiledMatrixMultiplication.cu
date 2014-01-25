@@ -19,7 +19,7 @@ __global__ void matrixMultiplyShared(float * A, float * B, float * C,
     //@@ Insert code to implement matrix multiplication here
     //@@ You have to use shared memory for this MP
 	
-	__shared__ float ds_A[TILE_WIDTH][TILE_WIDTH];
+    __shared__ float ds_A[TILE_WIDTH][TILE_WIDTH];
     __shared__ float ds_B[TILE_WIDTH][TILE_WIDTH];
 
     int tx  = threadIdx.x, ty = threadIdx.y;
@@ -31,28 +31,28 @@ __global__ void matrixMultiplyShared(float * A, float * B, float * C,
 
     for (int m = 0; m < ceil((float) width / TILE_WIDTH); ++m) {
 		
-		//Phase 0 load
-		if (row < numARows && m * TILE_WIDTH + tx < numAColumns) {
-            ds_A[ty][tx] = A[row * numAColumns + m * TILE_WIDTH + tx];
-		} else {
-            ds_A[ty][tx] = 0.0;
-		}
+	//Phase 0 load
+	if (row < numARows && m * TILE_WIDTH + tx < numAColumns) {
+           ds_A[ty][tx] = A[row * numAColumns + m * TILE_WIDTH + tx];
+	} else {
+           ds_A[ty][tx] = 0.0;
+	}
 		
-		//Phase 1 load
-		if (m * TILE_WIDTH + ty < numBRows && col < numBColumns) {
-            ds_B[ty][tx] = B[(m * TILE_WIDTH + ty) * numBColumns + col];
-		} else {
-            ds_B[ty][tx] = 0.0;
-		}
+	//Phase 1 load
+	if (m * TILE_WIDTH + ty < numBRows && col < numBColumns) {
+           ds_B[ty][tx] = B[(m * TILE_WIDTH + ty) * numBColumns + col];
+	} else {
+           ds_B[ty][tx] = 0.0;
+	}
 		
-		//Wait for all loading threads
+	//Wait for all loading threads
         __syncthreads();
 		
-		//Calcluation phase
+	//Calcluation phase
         for (int k = 0; k < TILE_WIDTH && k < numAColumns && k < numBRows; ++k)
             pval += ds_A[ty][k] * ds_B[k][tx];
 		
-		//Wait for all calculating threads
+	//Wait for all calculating threads
         __syncthreads();
     }
 
